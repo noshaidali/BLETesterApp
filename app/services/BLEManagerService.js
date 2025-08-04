@@ -23,11 +23,15 @@ class BLEManagerService {
     try {
       await BleManager.scan([], 10, true);
       const discoverListener = bleEmitter.addListener('BleManagerDiscoverPeripheral', (device) => {
-        console.log(device)
-        if (device && !this.devices.has(device.id)) {
-          this.devices.set(device.id, device);
-          onDeviceFound?.(device);
-        }
+      if (
+        device &&
+        !this.devices.has(device.id) &&
+        Array.isArray(device.advertising?.serviceUUIDs) &&
+        device.advertising.serviceUUIDs.includes(TARGET_UUID)
+      ) {
+        this.devices.set(device.id, device);
+        onDeviceFound?.(device);
+      }
       });
 
       this.listeners.push(discoverListener);

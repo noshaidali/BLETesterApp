@@ -2,72 +2,97 @@ import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   FlatList,
-  TouchableOpacity,
+  StyleSheet,
   Alert,
-  ActivityIndicator,
 } from 'react-native';
 import BLEPlxService from '../services/BLEPlxService';
-import BLEManagerService from '../services/BLEManagerService';
+import { krakenDeviceUUID } from '../utils/KrakenUUIDs';
 
-export default function ConnectivityScreen({ route }) {
-  const { method } = route.params;
-  const [devices, setDevices] = useState([]);
-  const [loading, setLoading] = useState(false);
-
-  const bleService = method === 'plx' ? BLEPlxService : BLEManagerService;
+export default function ConnectivityScreen() {
+  const [status, setStatus] = useState('🔍 Scanning...');
+  const [devicesData, setDevicesData] = useState([]);
+  const [connectedDevices, setConnectedDevices] = useState([]);
 
   useEffect(() => {
-    (async () => {
-      await bleService.requestPermissions();
-      setDevices([]);
-      setLoading(true);
+    const connectToDevice = async (device) => {
+      try {
+        const result = await BLEPlxService.connectAndDiscover(device.id);
+        setDevicesData((prev) => [
+          ...prev,
+          {
+            device,
+            services: result,
+          },
+        ]);
+        setConnectedDevices((prev) => [...prev, device.id]);
+      } catch (err) {
+        setStatus(`❌ Error connecting to ${device.name || device.id}: ${err.message}`);
+      }
+    };
 
-      bleService.startScan(
-        (device) => setDevices((prev) => [...prev, device]),
-        (err) => Alert.alert('Scan Error', err.message)
+    const start = async () => {
+      setConnectedDevices([])
+      setDevicesData([])
+      await BLEPlxService.requestPermissions();
+      BLEPlxService.startScan(
+        (device) => {
+          const serviceUUIDs = device.serviceUUIDs || device.advertisementServiceUUIDs || [];
+          if (
+            serviceUUIDs.includes(krakenDeviceUUID) &&
+            !connectedDevices.includes(device.id)
+          ) {
+            connectToDevice(device);
+          }
+        },
+        (err) => {
+          setStatus(`❌ Scan Error: ${err.message}`);
+        }
       );
 
       setTimeout(() => {
-        bleService.stopScan();
-        setLoading(false);
+        BLEPlxService.stopScan();
+        setStatus('✅ Scan complete.');
       }, 10000);
-    })();
+    };
 
-    return () => bleService.stopScan();
-  }, [method]);
+    start();
 
-  const connectToDevice = async (device) => {
-    try {
-      await bleService.connect(device.id);
-      Alert.alert('Connected', `Connected to ${device.name || device.id}`);
-    } catch (err) {
-      Alert.alert('Connection Failed', err.message);
-    }
-  };
-
-  const renderItem = ({ item }) => (
-    <TouchableOpacity
-      onPress={() => connectToDevice(item)}
-      style={styles.device}
-    >
-      <Text style={styles.deviceName}>{item.name || 'Unnamed Device'}</Text>
-      <Text style={styles.deviceId}>{item.id}</Text>
-    </TouchableOpacity>
-  );
+    return () => {
+      BLEPlxService.stopScan();
+    };
+  }, []);
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>
-        BLE Devices ({method === 'plx' ? 'BLE-PLX' : 'BLE-Manager'})
-      </Text>
-      {loading && <ActivityIndicator size="large" color="#2563EB" />}
+      <Text style={styles.status}>{status}</Text>
+
       <FlatList
-        data={devices}
-        keyExtractor={(item) => item.id}
-        renderItem={renderItem}
-        contentContainerStyle={{ paddingBottom: 50 }}
+        data={devicesData}
+        keyExtractor={(item) => item.device.id}
+        renderItem={({ item }) => {
+          let name = 'N/A'
+          for (const obj of item.services) {
+            if (obj.name !== 'N/A') {
+              name = obj.name
+            }
+          }
+          const totalServices = item.services.length;
+          const totalCharacteristics = item.services.reduce(
+            (sum, svc) => sum + svc.characteristics.length,
+            0
+          );
+
+          return (
+            <View style={styles.serviceBox}>
+              <Text style={styles.connected}>Connected to: {name}</Text>
+              <Text style={styles.serviceTitle}>
+                Found {totalServices} Services and {totalCharacteristics} Characteristics
+              </Text>
+              <Text style={styles.connected}>RSSI: {item.device.rssi}</Text>
+            </View>
+          );
+        }}
       />
     </View>
   );
@@ -75,13 +100,38 @@ export default function ConnectivityScreen({ route }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 20 },
-  title: { fontSize: 20, fontWeight: 'bold', marginBottom: 10 },
-  device: {
-    padding: 15,
-    backgroundColor: '#F3F4F6',
-    marginVertical: 8,
-    borderRadius: 10,
+  status: {
+    marginVertical: 10,
+    fontSize: 16,
+    fontWeight: '500',
+    textAlign: 'center',
+    color: '#0F766E',
   },
-  deviceName: { fontSize: 16, fontWeight: 'bold' },
-  deviceId: { fontSize: 12, color: '#6B7280' },
+  connected: {
+    textAlign: 'center',
+    fontSize: 16,
+    marginBottom: 10,
+    color: '#4B5563',
+  },
+  serviceBox: {
+    backgroundColor: '#E5E7EB',
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 10,
+  },
+  serviceTitle: {
+    fontWeight: 'bold',
+    marginBottom: 4,
+    color: '#1F2937',
+    textAlign: 'center',
+  },
+  charItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 2,
+  },
+  charFlags: {
+    fontSize: 12,
+    color: '#6B7280',
+  },
 });
