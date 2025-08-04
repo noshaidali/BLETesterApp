@@ -1,12 +1,29 @@
-import BleManager from 'react-native-ble-manager';
-import { NativeModules, NativeEventEmitter, Platform, PermissionsAndroid } from 'react-native';
+// import BleManager from 'react-native-ble-manager';
+import BleManager, {
+  BleDisconnectPeripheralEvent,
+  BleManagerDidUpdateValueForCharacteristicEvent,
+  BleScanCallbackType,
+  BleScanMatchMode,
+  BleScanMode,
+  Peripheral,
+  PeripheralInfo,
+} from 'react-native-ble-manager';
 
-const BleManagerModule = NativeModules.BleManager;
-const bleEmitter = new NativeEventEmitter(BleManagerModule);
+import { PermissionsAndroid, Platform } from 'react-native';
+import { krakenDeviceUUID, krakenDisplayNameCharacteristicUUID, krakenManfacturerNameCharacteristicUUID } from '../utils/KrakenUUIDs';
+import { Buffer } from 'buffer'; // npm install buffer if missing
 
 class BLEManagerService {
-  devices = new Map();
-  listeners = [];
+  constructor() {
+    this.devices = new Map();
+
+    // Listen to BLE state changes
+    // BleManager.start({ showAlert: false });
+
+    // BleManager.onStateChange((state) => {
+    //     console.log(state);
+    // }, true);
+  }
 
   async requestPermissions() {
     if (Platform.OS === 'android') {
@@ -31,37 +48,87 @@ class BLEManagerService {
     return true;
   }
 
-  async startScan(onDeviceFound, onError) {
-    this.devices.clear();
-    try {
-      await BleManager.scan([], 10, true);
-      const discoverListener = bleEmitter.addListener('BleManagerDiscoverPeripheral', (device) => {
-        if (
-          device &&
-          !this.devices.has(device.id) &&
-          Array.isArray(device.advertising?.serviceUUIDs) &&
-          device.advertising.serviceUUIDs.includes(TARGET_UUID)
-        ) {
-          this.devices.set(device.id, device);
-          onDeviceFound?.(device);
-        }
-      });
+  startScan(onDeviceFound, onError) {
+    setTimeout(() => {
+      try {
+        console.log('[startScan] starting scan...');
+        // setIsScanning(true);
+        BleManager.scan([krakenDeviceUUID], 100000, false, {
+          matchMode: BleScanMatchMode.Sticky,
+          scanMode: BleScanMode.LowLatency,
+          callbackType: BleScanCallbackType.AllMatches,
+        })
+          .then(() => {
+            console.debug('[startScan] scan promise returned successfully.');
+          })
+          .catch((err) => {
+            console.error('[startScan] ble scan returned in error', err);
+          });
+      } catch (error) {
+        console.error('[startScan] ble scan error thrown', error);
+      }
+      // this.devices.clear();
+      // BleManager.scan([], 10, true); // Scan for 10 seconds
 
-      this.listeners.push(discoverListener);
-    } catch (err) {
-      onError?.(err);
-    }
+      // // Listen for discovered devices
+      // BleManager.on('BleManagerDiscoverPeripheral', (device) => {
+      //     if (device && !this.devices.has(device.id) && device.name === "Kraken v2") {
+      //         const serviceUUIDs = device.advertising?.serviceUUIDs || [];
+      //         if (serviceUUIDs.includes(krakenDeviceUUID)) {
+      //             console.log("DEVICE: ", device);
+      //             this.devices.set(device.id, device);
+      //             onDeviceFound?.(device);
+      //         }
+      //     }
+      // });
+
+    }, 1000);
   }
 
   stopScan() {
     BleManager.stopScan();
-    this.listeners.forEach((l) => l.remove());
-    this.listeners = [];
   }
 
-  async connect(deviceId) {
-    await BleManager.connect(deviceId);
-    await BleManager.retrieveServices(deviceId);
+  async connectAndDiscover(deviceId) {
+    try {
+      const device = await BleManager.connect(deviceId);
+      const services = await BleManager.retrieveServices(deviceId);
+      const results = [];
+
+      if (!services || services.length === 0) {
+        return results;
+      }
+
+      for (const service of services) {
+        const characteristics = await BleManager.characteristicsForService(deviceId, service.uuid);
+        let name = 'N/A';
+        for (const char of characteristics) {
+          if (char.uuid.toLowerCase().includes(krakenDisplayNameCharacteristicUUID) && char.isReadable) {
+            const base64Value = await BleManager.read(deviceId, service.uuid, char.uuid);
+            const decoded = Buffer.from(base64Value, 'base64').toString('utf8');
+            name = decoded;
+          }
+        }
+        results.push({
+          name: name,
+          serviceUUID: service.uuid,
+          characteristics: characteristics.map((char) => ({
+            uuid: char.uuid,
+            isReadable: char.isReadable,
+            isWritableWithResponse: char.isWritableWithResponse,
+            isNotifiable: char.isNotifiable,
+          })),
+        });
+      }
+
+      return results;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  destroy() {
+    BleManager.stop();
   }
 }
 

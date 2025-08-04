@@ -6,7 +6,9 @@ import BleManager from 'react-native-ble-manager';
 
 export default function App() {
   useEffect(() => {
-    BleManager.start({ showAlert: false });
+    BleManager.start({ showAlert: false }).then(() => {
+      console.log("BLE MANAGER Module initialized");
+    });
 
     if (Platform.OS === 'android') {
       // Optional: enable Bluetooth on Android start

@@ -85,6 +85,7 @@ android {
         versionCode 1
         versionName "1.0"
     }
+
     signingConfigs {
         debug {
             storeFile file('debug.keystore')
@@ -92,7 +93,17 @@ android {
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
+
+        release {
+            if (project.hasProperty('MY_RELEASE_STORE_FILE')) {
+                storeFile file(MY_RELEASE_STORE_FILE)
+                storePassword MY_RELEASE_STORE_PASSWORD
+                keyAlias MY_RELEASE_KEY_ALIAS
+                keyPassword MY_RELEASE_KEY_PASSWORD
+            }
+        }
     }
+
     buildTypes {
         debug {
             signingConfig signingConfigs.debug

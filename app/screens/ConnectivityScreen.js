@@ -75,7 +75,7 @@ export default function ConnectivityScreen({ route }) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.status}>{status}</Text>
+      <Text style={styles.status}>{method == 'plx' ? "Ble Plx" : "Ble Manager"} {status}</Text>
 
       <FlatList
         data={devicesData}
