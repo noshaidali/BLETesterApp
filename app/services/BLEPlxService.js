@@ -49,6 +49,9 @@ class BLEPlxService {
 
             const services = await device.services();
             const results = [];
+            if (!services || services.length === 0) {
+                return results
+            }
 
             for (const service of services) {
                 const characteristics = await device.characteristicsForService(service.uuid);

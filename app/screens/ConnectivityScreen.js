@@ -32,8 +32,6 @@ export default function ConnectivityScreen() {
     };
 
     const start = async () => {
-      setConnectedDevices([])
-      setDevicesData([])
       await BLEPlxService.requestPermissions();
       BLEPlxService.startScan(
         (device) => {
@@ -53,12 +51,14 @@ export default function ConnectivityScreen() {
       setTimeout(() => {
         BLEPlxService.stopScan();
         setStatus('✅ Scan complete.');
-      }, 10000);
+      }, 5000);
     };
 
     start();
 
     return () => {
+      setConnectedDevices([])
+      setDevicesData([])
       BLEPlxService.stopScan();
     };
   }, []);
@@ -85,6 +85,7 @@ export default function ConnectivityScreen() {
 
           return (
             <View style={styles.serviceBox}>
+              <Text style={styles.connected}>Scanned Name: {item.device.name}</Text>
               <Text style={styles.connected}>Connected to: {name}</Text>
               <Text style={styles.serviceTitle}>
                 Found {totalServices} Services and {totalCharacteristics} Characteristics
