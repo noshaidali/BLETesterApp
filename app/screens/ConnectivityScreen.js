@@ -10,15 +10,17 @@ import BLEPlxService from '../services/BLEPlxService';
 import BLEManagerService from '../services/BLEManagerService';
 import { krakenDeviceUUID } from '../utils/KrakenUUIDs';
 
-export default function ConnectivityScreen() {
+export default function ConnectivityScreen({ route }) {
+  const { method } = route.params;
   const [status, setStatus] = useState('🔍 Scanning...');
   const [devicesData, setDevicesData] = useState([]);
   const [connectedDevices, setConnectedDevices] = useState([]);
+  const bleService = method === 'plx' ? BLEPlxService : BLEManagerService;
 
   useEffect(() => {
     const connectToDevice = async (device) => {
       try {
-        const result = await BLEPlxService.connectAndDiscover(device.id);
+        const result = await bleService.connectAndDiscover(device.id);
         setDevicesData((prev) => [
           ...prev,
           {
@@ -28,13 +30,20 @@ export default function ConnectivityScreen() {
         ]);
         setConnectedDevices((prev) => [...prev, device.id]);
       } catch (err) {
-        setStatus(`❌ Error connecting to ${device.name || device.id}: ${err.message}`);
+        console.log(`❌ Error connecting to ${device.name || device.id}: ${err.message}`);
+        setDevicesData((prev) => [
+          ...prev,
+          {
+            device,
+            services: [],
+          },
+        ]);
       }
     };
 
     const start = async () => {
-      await BLEPlxService.requestPermissions();
-      BLEPlxService.startScan(
+      await bleService.requestPermissions();
+      bleService.startScan(
         (device) => {
           const serviceUUIDs = device.serviceUUIDs || device.advertisementServiceUUIDs || [];
           if (
@@ -45,14 +54,14 @@ export default function ConnectivityScreen() {
           }
         },
         (err) => {
-          setStatus(`❌ Scan Error: ${err.message}`);
+          console.log(`❌ Scan Error: ${err.message}`);
         }
       );
 
-      setTimeout(() => {
-        BLEPlxService.stopScan();
-        setStatus('✅ Scan complete.');
-      }, 10000);
+      // setTimeout(() => {
+      //   bleService.stopScan();
+      //   setStatus('✅ Scan complete.');
+      // }, 10000);
     };
 
     start();
@@ -60,7 +69,7 @@ export default function ConnectivityScreen() {
     return () => {
       setConnectedDevices([])
       setDevicesData([])
-      BLEPlxService.stopScan();
+      bleService.stopScan();
     };
   }, []);
 
@@ -87,7 +96,7 @@ export default function ConnectivityScreen() {
           return (
             <View style={styles.serviceBox}>
               <Text style={styles.connected}>Scanned Name: {item.device.name}</Text>
-              <Text style={styles.connected}>Connected to: {name}</Text>
+              <Text style={styles.connected}>{name == "N/A" ? "❌ Error connecting to " + item.device.name : "✅ Connected to " + name}</Text>
               <Text style={styles.serviceTitle}>
                 Found {totalServices} Services and {totalCharacteristics} Characteristics
               </Text>
