@@ -12,13 +12,13 @@ export default function HomeScreen({ navigation }) {
       >
         <Text style={styles.buttonText}>Test with BLE-PLX</Text>
       </TouchableOpacity>
-
+{/* 
       <TouchableOpacity
         style={[styles.button, { backgroundColor: '#4B5563' }]}
         onPress={() => navigation.navigate('Connectivity', { method: 'manager' })}
       >
         <Text style={styles.buttonText}>Test with BLE-Manager</Text>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
     </View>
   );
 }

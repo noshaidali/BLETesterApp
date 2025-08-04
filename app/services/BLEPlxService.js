@@ -8,34 +8,65 @@ class BLEPlxService {
     constructor() {
         this.manager = new BleManager();
         this.devices = new Map();
+
+        this.manager.onStateChange((state) => {
+            console.log(state);
+        }, true);
     }
 
     async requestPermissions() {
-        if (Platform.OS === 'android' && Platform.Version >= 23) {
-            await PermissionsAndroid.requestMultiple([
-                PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-                PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
-                PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT,
-            ]);
+        if (Platform.OS === 'android') {
+            const permissions = [];
+            if (Platform.Version >= 23 && Platform.Version <= 30) {
+                permissions.push(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION);
+            } else if (Platform.Version >= 31) {
+                permissions.push(
+                    PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
+                    PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT,
+                );
+            }
+
+            if (permissions.length === 0) {
+                return true;
+            }
+            const granted = await PermissionsAndroid.requestMultiple(permissions);
+            return Object.values(granted).every(
+                result => result === PermissionsAndroid.RESULTS.GRANTED,
+            );
         }
+        return true;
     }
 
     startScan(onDeviceFound, onError) {
-        this.devices.clear();
-        this.manager.startDeviceScan(null, null, (error, device) => {
-            if (error) {
-                onError?.(error);
-                return;
-            }
-            if (device && !this.devices.has(device.id) && device.name === "Kraken v2") {
-                const serviceUUIDs = device.serviceUUIDs || [];
-                if (serviceUUIDs.includes(krakenDeviceUUID)) {
-                    console.log("DEVICE: ", device)
-                    this.devices.set(device.id, device);
-                    onDeviceFound?.(device);
+        setTimeout(() => {
+            this.devices.clear();
+            this.manager.startDeviceScan(null, null, (error, device) => {
+                if (error) {
+                    onError?.(error);
+                    return;
                 }
-            }
-        });
+                if (Platform.OS === 'android') {
+                    if (device && !this.devices.has(device.id)) {
+                        const serviceUUIDs = device.serviceUUIDs || [];
+                        if (serviceUUIDs.includes(krakenDeviceUUID)) {
+                            console.log("DEVICE: ", device)
+                            this.devices.set(device.id, device);
+                            onDeviceFound?.(device);
+                        }
+                    }
+                } else {
+                    if (device && !this.devices.has(device.id) && device.name === "Kraken v2") {
+                        const serviceUUIDs = device.serviceUUIDs || [];
+                        if (serviceUUIDs.includes(krakenDeviceUUID)) {
+                            console.log("DEVICE: ", device)
+                            this.devices.set(device.id, device);
+                            onDeviceFound?.(device);
+                        }
+                    }
+                }
+
+            });
+        }, 1000);
     }
 
     stopScan() {

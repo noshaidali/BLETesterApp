@@ -7,6 +7,7 @@ import {
   Alert,
 } from 'react-native';
 import BLEPlxService from '../services/BLEPlxService';
+import BLEManagerService from '../services/BLEManagerService';
 import { krakenDeviceUUID } from '../utils/KrakenUUIDs';
 
 export default function ConnectivityScreen() {
@@ -51,7 +52,7 @@ export default function ConnectivityScreen() {
       setTimeout(() => {
         BLEPlxService.stopScan();
         setStatus('✅ Scan complete.');
-      }, 5000);
+      }, 10000);
     };
 
     start();
