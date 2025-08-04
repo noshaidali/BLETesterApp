@@ -9,37 +9,39 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import BLEPlxService from '../services/BLEPlxService';
+import BLEManagerService from '../services/BLEManagerService';
 
 export default function ConnectivityScreen({ route }) {
   const { method } = route.params;
   const [devices, setDevices] = useState([]);
   const [loading, setLoading] = useState(false);
 
+  const bleService = method === 'plx' ? BLEPlxService : BLEManagerService;
+
   useEffect(() => {
-    if (method === 'plx') {
-      BLEPlxService.requestPermissions().then(() => {
-        setLoading(true);
-        BLEPlxService.startScan(
-          (device) => setDevices((prev) => [...prev, device]),
-          (err) => Alert.alert('Scan Error', err.message)
-        );
+    (async () => {
+      await bleService.requestPermissions();
+      setDevices([]);
+      setLoading(true);
 
-        setTimeout(() => {
-          BLEPlxService.stopScan();
-          setLoading(false);
-        }, 10000);
-      });
-    }
+      bleService.startScan(
+        (device) => setDevices((prev) => [...prev, device]),
+        (err) => Alert.alert('Scan Error', err.message)
+      );
 
-    return () => {
-      BLEPlxService.stopScan();
-    };
+      setTimeout(() => {
+        bleService.stopScan();
+        setLoading(false);
+      }, 10000);
+    })();
+
+    return () => bleService.stopScan();
   }, [method]);
 
   const connectToDevice = async (device) => {
     try {
-      const connected = await BLEPlxService.connectToDevice(device.id);
-      Alert.alert('Connected', `Connected to ${connected.name || device.id}`);
+      await bleService.connect(device.id);
+      Alert.alert('Connected', `Connected to ${device.name || device.id}`);
     } catch (err) {
       Alert.alert('Connection Failed', err.message);
     }
@@ -57,7 +59,9 @@ export default function ConnectivityScreen({ route }) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>BLE Devices (BLE-PLX)</Text>
+      <Text style={styles.title}>
+        BLE Devices ({method === 'plx' ? 'BLE-PLX' : 'BLE-Manager'})
+      </Text>
       {loading && <ActivityIndicator size="large" color="#2563EB" />}
       <FlatList
         data={devices}
