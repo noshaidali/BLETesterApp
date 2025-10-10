@@ -20,7 +20,8 @@ platform :ios do
   lane :beta do
     # Ensure we have the latest dependencies
     cocoapods(
-      clean_install: true
+      clean_install: true,
+      use_bundle_exec: false
     )
     
     # Increment build number
@@ -50,7 +51,8 @@ platform :ios do
   lane :release do
     # Ensure we have the latest dependencies
     cocoapods(
-      clean_install: true
+      clean_install: true,
+      use_bundle_exec: false
     )
     
     # Increment build number
@@ -81,7 +83,8 @@ platform :ios do
   lane :build_dev do
     # Ensure we have the latest dependencies
     cocoapods(
-      clean_install: true
+      clean_install: true,
+      use_bundle_exec: false
     )
     
     # Build the app for development
@@ -217,9 +220,10 @@ lane :setup do
   
   # Install iOS dependencies
   if is_mac
-    cocoapods(
-      clean_install: true
-    )
+      cocoapods(
+        clean_install: true,
+        use_bundle_exec: false
+      )
   end
   
   # Install Android dependencies
