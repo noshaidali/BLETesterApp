@@ -11,7 +11,7 @@ team_id(ENV["IOS_TEAM_ID"])
 
 bundle_identifier("org.xcorebit.BLETesterApp")
 
-package_name("com.bletesterapp")
+# package_name("com.bletesterapp")
 
 # The path to your app's icon
 # app_icon("path/to/icon.png")

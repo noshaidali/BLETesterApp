@@ -21,7 +21,7 @@ platform :ios do
     # Ensure we have the latest dependencies
     cocoapods(
       clean_install: true,
-      use_bundle_exec: true,
+      use_bundle_exec: false,
       podfile: "ios/Podfile"
     )
     
@@ -53,7 +53,7 @@ platform :ios do
     # Ensure we have the latest dependencies
     cocoapods(
       clean_install: true,
-      use_bundle_exec: true,
+      use_bundle_exec: false,
       podfile: "ios/Podfile"
     )
     
@@ -86,7 +86,7 @@ platform :ios do
     # Ensure we have the latest dependencies
     cocoapods(
       clean_install: true,
-      use_bundle_exec: true,
+      use_bundle_exec: false,
       podfile: "ios/Podfile"
     )
     
@@ -225,7 +225,7 @@ lane :setup do
   if is_mac
       cocoapods(
         clean_install: true,
-        use_bundle_exec: true,
+        use_bundle_exec: false,
         podfile: "ios/Podfile"
       )
   end
