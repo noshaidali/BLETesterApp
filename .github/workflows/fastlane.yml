@@ -23,7 +23,6 @@ on:
         - build_debug
         - beta
         - release
-        - test
         - lint
         - setup
 

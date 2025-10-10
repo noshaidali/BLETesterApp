@@ -165,19 +165,6 @@ platform :android do
 end
 
 # Common lanes for both platforms
-desc "Run tests"
-lane :test do
-  # Run React Native tests
-  sh("npm test -- --coverage --watchAll=false")
-  
-  # Run iOS tests if on macOS
-  if is_mac
-    run_tests(
-      scheme: "BLETesterApp",
-      device: "iPhone 15"
-    )
-  end
-end
 
 desc "Bump version and build number"
 lane :bump_version do

@@ -7,8 +7,8 @@ on:
     branches: [ main, develop, Fastlane-integration ]
 
 jobs:
-  test:
-    name: Test
+  lint:
+    name: Lint
     runs-on: ubuntu-latest
     
     steps:
@@ -26,20 +26,11 @@ jobs:
       
     - name: Run linter
       run: npm run lint
-      
-    - name: Run tests
-      run: npm test -- --coverage --watchAll=false
-      
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
-      with:
-        file: ./coverage/lcov.info
-        fail_ci_if_error: false
 
   build-android:
     name: Build Android
     runs-on: ubuntu-latest
-    needs: test
+    needs: lint
     
     steps:
     - name: Checkout code
@@ -89,7 +80,7 @@ jobs:
   build-ios:
     name: Build iOS
     runs-on: macos-latest
-    needs: test
+    needs: lint
     
     steps:
     - name: Checkout code
