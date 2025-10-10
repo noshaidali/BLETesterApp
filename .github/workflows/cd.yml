@@ -6,6 +6,8 @@ on:
       - 'v*'
     branches:
       - main
+      - develop
+      - Fastlane-integration
 
 jobs:
   deploy-android:
