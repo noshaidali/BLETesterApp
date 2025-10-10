@@ -21,7 +21,8 @@ platform :ios do
     # Ensure we have the latest dependencies
     cocoapods(
       clean_install: true,
-      use_bundle_exec: false
+      use_bundle_exec: true,
+      podfile: "ios/Podfile"
     )
     
     # Increment build number
@@ -52,7 +53,8 @@ platform :ios do
     # Ensure we have the latest dependencies
     cocoapods(
       clean_install: true,
-      use_bundle_exec: false
+      use_bundle_exec: true,
+      podfile: "ios/Podfile"
     )
     
     # Increment build number
@@ -84,7 +86,8 @@ platform :ios do
     # Ensure we have the latest dependencies
     cocoapods(
       clean_install: true,
-      use_bundle_exec: false
+      use_bundle_exec: true,
+      podfile: "ios/Podfile"
     )
     
     # Build the app for development
@@ -222,7 +225,8 @@ lane :setup do
   if is_mac
       cocoapods(
         clean_install: true,
-        use_bundle_exec: false
+        use_bundle_exec: true,
+        podfile: "ios/Podfile"
       )
   end
   
