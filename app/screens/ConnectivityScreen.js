@@ -71,7 +71,7 @@ export default function ConnectivityScreen({ route }) {
       setDevicesData([])
       bleService.stopScan();
     };
-  }, []);
+  }, [bleService, connectedDevices]);
 
   return (
     <View style={styles.container}>
