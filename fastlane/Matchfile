@@ -1,0 +1,5 @@
+git_url("https://github.com/noshaidali/ios-certificates")
+storage_mode("git")
+type("development") # The default type, can be: appstore, adhoc, enterprise, development
+app_identifier("org.xcorebit.BLETesterApp")
+username("noshaid.ali@xcorebit.com") # Your Apple Developer Portal username

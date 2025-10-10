@@ -1,0 +1,30 @@
+# The Appfile is a configuration file for fastlane. It's usually placed in the root of the project.
+# It contains metadata about your app that can be used by fastlane.
+# If you want to get a list of all available options run `fastlane docs`
+
+# The name of your app
+app_identifier("com.bletesterapp")
+
+# The display name of your app
+app_name("BLETesterApp")
+
+# Your Apple Developer Portal username
+apple_id(ENV["APPLE_ID"])
+
+# Your Apple Developer Team ID
+team_id(ENV["IOS_TEAM_ID"])
+
+# The bundle identifier of your app
+bundle_identifier("org.xcorebit.BLETesterApp")
+
+# The name of your app in Google Play Console
+package_name("com.bletesterapp")
+
+# The path to your app's icon
+# app_icon("path/to/icon.png")
+
+# The path to your app's screenshots
+# screenshots_path("path/to/screenshots")
+
+# The path to your app's metadata
+# metadata_path("path/to/metadata")

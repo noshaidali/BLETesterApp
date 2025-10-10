@@ -1,0 +1,243 @@
+# This file contains the fastlane.tools configuration
+# You can find the documentation at https://docs.fastlane.tools
+#
+# For a list of all available actions, check out
+#
+#     https://docs.fastlane.tools/actions
+#
+# For a list of all available plugins, check out
+#
+#     https://docs.fastlane.tools/plugins/available-plugins
+#
+
+# Uncomment the line if you want fastlane to automatically update itself
+# update_fastlane
+
+default_platform(:ios)
+
+platform :ios do
+  desc "Push a new beta build to TestFlight"
+  lane :beta do
+    # Ensure we have the latest dependencies
+    cocoapods(
+      clean_install: true
+    )
+    
+    # Increment build number
+    increment_build_number(xcodeproj: "ios/BLETesterApp.xcodeproj")
+    
+    # Build the app
+    build_app(
+      scheme: "BLETesterApp",
+      export_method: "app-store",
+      export_options: {
+        method: "app-store",
+        teamID: ENV["IOS_TEAM_ID"],
+        uploadBitcode: false,
+        uploadSymbols: true,
+        compileBitcode: false
+      }
+    )
+    
+    # Upload to TestFlight
+    upload_to_testflight(
+      skip_waiting_for_build_processing: true,
+      groups: ["Internal Testing"]
+    )
+  end
+
+  desc "Build and upload to App Store"
+  lane :release do
+    # Ensure we have the latest dependencies
+    cocoapods(
+      clean_install: true
+    )
+    
+    # Increment build number
+    increment_build_number(xcodeproj: "ios/BLETesterApp.xcodeproj")
+    
+    # Build the app
+    build_app(
+      scheme: "BLETesterApp",
+      export_method: "app-store",
+      export_options: {
+        method: "app-store",
+        teamID: ENV["IOS_TEAM_ID"],
+        uploadBitcode: false,
+        uploadSymbols: true,
+        compileBitcode: false
+      }
+    )
+    
+    # Upload to App Store
+    upload_to_app_store(
+      force: true,
+      skip_metadata: false,
+      skip_screenshots: true
+    )
+  end
+
+  desc "Build for development"
+  lane :build_dev do
+    # Ensure we have the latest dependencies
+    cocoapods(
+      clean_install: true
+    )
+    
+    # Build the app for development
+    build_app(
+      scheme: "BLETesterApp",
+      export_method: "development",
+      export_options: {
+        method: "development",
+        teamID: ENV["IOS_TEAM_ID"]
+      }
+    )
+  end
+end
+
+platform :android do
+  desc "Build and upload to Google Play Console"
+  lane :release do
+    # Clean and build the project
+    gradle(
+      task: "clean",
+      project_dir: "android/"
+    )
+    
+    # Build release APK
+    gradle(
+      task: "assembleRelease",
+      project_dir: "android/",
+      properties: {
+        "android.injected.signing.store.file" => ENV["ANDROID_KEYSTORE_PATH"],
+        "android.injected.signing.store.password" => ENV["ANDROID_KEYSTORE_PASSWORD"],
+        "android.injected.signing.key.alias" => ENV["ANDROID_KEY_ALIAS"],
+        "android.injected.signing.key.password" => ENV["ANDROID_KEY_PASSWORD"]
+      }
+    )
+    
+    # Upload to Google Play Console
+    upload_to_play_store(
+      track: "internal",
+      apk: "android/app/build/outputs/apk/release/app-release.apk",
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true
+    )
+  end
+
+  desc "Build APK for testing"
+  lane :build_apk do
+    # Clean and build the project
+    gradle(
+      task: "clean",
+      project_dir: "android/"
+    )
+    
+    # Build release APK
+    gradle(
+      task: "assembleRelease",
+      project_dir: "android/",
+      properties: {
+        "android.injected.signing.store.file" => ENV["ANDROID_KEYSTORE_PATH"],
+        "android.injected.signing.store.password" => ENV["ANDROID_KEYSTORE_PASSWORD"],
+        "android.injected.signing.key.alias" => ENV["ANDROID_KEY_ALIAS"],
+        "android.injected.signing.key.password" => ENV["ANDROID_KEY_PASSWORD"]
+      }
+    )
+  end
+
+  desc "Build debug APK"
+  lane :build_debug do
+    # Clean and build the project
+    gradle(
+      task: "clean",
+      project_dir: "android/"
+    )
+    
+    # Build debug APK
+    gradle(
+      task: "assembleDebug",
+      project_dir: "android/"
+    )
+  end
+end
+
+# Common lanes for both platforms
+desc "Run tests"
+lane :test do
+  # Run React Native tests
+  sh("npm test -- --coverage --watchAll=false")
+  
+  # Run iOS tests if on macOS
+  if is_mac
+    run_tests(
+      scheme: "BLETesterApp",
+      device: "iPhone 15"
+    )
+  end
+end
+
+desc "Bump version and build number"
+lane :bump_version do
+  # Get current version from package.json
+  version = JSON.parse(File.read("package.json"))["version"]
+  
+  # Increment patch version
+  version_parts = version.split(".")
+  version_parts[2] = (version_parts[2].to_i + 1).to_s
+  new_version = version_parts.join(".")
+  
+  # Update package.json
+  package_json = JSON.parse(File.read("package.json"))
+  package_json["version"] = new_version
+  File.write("package.json", JSON.pretty_generate(package_json))
+  
+  # Update iOS version
+  if is_mac
+    increment_version_number(
+      version_number: new_version,
+      xcodeproj: "ios/BLETesterApp.xcodeproj"
+    )
+  end
+  
+  # Update Android version
+  gradle(
+    task: "app:versionName",
+    project_dir: "android/",
+    properties: {
+      "versionName" => new_version
+    }
+  )
+  
+  UI.success("Version bumped to #{new_version}")
+end
+
+desc "Lint code"
+lane :lint do
+  # Run ESLint
+  sh("npm run lint")
+  
+  # Run Prettier check
+  sh("npx prettier --check .")
+end
+
+desc "Setup project"
+lane :setup do
+  # Install dependencies
+  sh("npm install")
+  
+  # Install iOS dependencies
+  if is_mac
+    cocoapods(
+      clean_install: true
+    )
+  end
+  
+  # Install Android dependencies
+  gradle(
+    task: "dependencies",
+    project_dir: "android/"
+  )
+end
