@@ -44,7 +44,7 @@ jobs:
         bundler-cache: false
         
     - name: Install Fastlane
-      run: gem install fastlane
+      run: gem install fastlane -v "~> 2.220"
         
     - name: Build and deploy Android
       env:
@@ -73,6 +73,11 @@ jobs:
         
     - name: Install dependencies
       run: npm ci
+
+    - name: Ensure CocoaPods
+      run: |
+        sudo gem install cocoapods -v "~> 1.15"
+        pod --version
       
     - name: Install CocoaPods
       run: |
@@ -93,7 +98,7 @@ jobs:
         bundler-cache: false
         
     - name: Install Fastlane
-      run: gem install fastlane
+      run: gem install fastlane -v "~> 2.220"
         
     - name: Build and deploy iOS
       env:
@@ -122,6 +127,11 @@ jobs:
         
     - name: Install dependencies
       run: npm ci
+
+    - name: Ensure CocoaPods
+      run: |
+        sudo gem install cocoapods -v "~> 1.15"
+        pod --version
       
     - name: Install CocoaPods
       run: |
@@ -142,7 +152,7 @@ jobs:
         bundler-cache: false
         
     - name: Install Fastlane
-      run: gem install fastlane
+      run: gem install fastlane -v "~> 2.220"
         
     - name: Deploy iOS Beta
       env:
@@ -188,7 +198,7 @@ jobs:
         bundler-cache: false
         
     - name: Install Fastlane
-      run: gem install fastlane
+      run: gem install fastlane -v "~> 2.220"
         
     - name: Deploy Android Beta
       env:
