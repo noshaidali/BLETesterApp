@@ -79,6 +79,13 @@ jobs:
         cd ios
         pod install
         
+    - name: Setup Node.js for iOS build
+      run: |
+        # Create symlink for Node.js to fix React Native iOS build
+        sudo ln -sf $(which node) /usr/local/bin/node
+        node --version
+        which node
+        
     - name: Setup Ruby
       uses: ruby/setup-ruby@v1
       with:
@@ -120,6 +127,13 @@ jobs:
       run: |
         cd ios
         pod install
+        
+    - name: Setup Node.js for iOS build
+      run: |
+        # Create symlink for Node.js to fix React Native iOS build
+        sudo ln -sf $(which node) /usr/local/bin/node
+        node --version
+        which node
         
     - name: Setup Ruby
       uses: ruby/setup-ruby@v1
