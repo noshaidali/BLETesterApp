@@ -30,6 +30,7 @@ platform :ios do
     
     # Build the app
     build_app(
+      workspace: "ios/BLETesterApp.xcworkspace",
       scheme: "BLETesterApp",
       export_method: "app-store",
       export_options: {
