@@ -64,10 +64,10 @@ jobs:
       uses: ruby/setup-ruby@v1
       with:
         ruby-version: '3.0'
-        bundler-cache: true
+        bundler-cache: false
         
-    - name: Install dependencies
-      run: bundle install
+    - name: Install Fastlane
+      run: gem install fastlane
         
     - name: Validate secrets
       run: |
@@ -270,10 +270,10 @@ jobs:
       uses: ruby/setup-ruby@v1
       with:
         ruby-version: '3.0'
-        bundler-cache: true
+        bundler-cache: false
         
-    - name: Install dependencies
-      run: bundle install
+    - name: Install Fastlane
+      run: gem install fastlane
         
     - name: Deploy Android Beta
       env:
