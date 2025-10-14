@@ -17,7 +17,13 @@ jobs:
   deploy-android:
     name: Deploy Android
     runs-on: ubuntu-latest
-    if: github.event.workflow_run.conclusion == 'success' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/Fastlane-integration' || startsWith(github.ref, 'refs/tags/v'))
+    if: |
+      (github.event_name == 'workflow_run' &&
+       github.event.workflow_run.conclusion == 'success' &&
+       (github.event.workflow_run.head_branch == 'main' ||
+        github.event.workflow_run.head_branch == 'develop' ||
+        github.event.workflow_run.head_branch == 'Fastlane-integration')) ||
+      (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
     
     steps:
     - name: Checkout code
@@ -78,7 +84,13 @@ jobs:
   deploy-ios:
     name: Deploy iOS
     runs-on: macos-latest
-    if: github.event.workflow_run.conclusion == 'success' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/Fastlane-integration' || startsWith(github.ref, 'refs/tags/v'))
+    if: |
+      (github.event_name == 'workflow_run' &&
+       github.event.workflow_run.conclusion == 'success' &&
+       (github.event.workflow_run.head_branch == 'main' ||
+        github.event.workflow_run.head_branch == 'develop' ||
+        github.event.workflow_run.head_branch == 'Fastlane-integration')) ||
+      (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
     
     steps:
     - name: Checkout code
@@ -142,7 +154,11 @@ jobs:
   deploy-ios-beta:
     name: Deploy iOS Beta
     runs-on: macos-latest
-    if: github.event.workflow_run.conclusion == 'success' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/Fastlane-integration')
+    if: |
+      github.event_name == 'workflow_run' &&
+      github.event.workflow_run.conclusion == 'success' &&
+      (github.event.workflow_run.head_branch == 'develop' ||
+       github.event.workflow_run.head_branch == 'Fastlane-integration')
     
     steps:
     - name: Checkout code
@@ -191,7 +207,11 @@ jobs:
   deploy-android-beta:
     name: Deploy Android Beta
     runs-on: ubuntu-latest
-    if: github.event.workflow_run.conclusion == 'success' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/Fastlane-integration')
+    if: |
+      github.event_name == 'workflow_run' &&
+      github.event.workflow_run.conclusion == 'success' &&
+      (github.event.workflow_run.head_branch == 'develop' ||
+       github.event.workflow_run.head_branch == 'Fastlane-integration')
     
     steps:
     - name: Checkout code
