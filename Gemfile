@@ -4,7 +4,7 @@ source 'https://rubygems.org'
 ruby ">= 2.6.10"
 
 # iOS build tooling (only needed on macOS runners)
-platforms :x86_64_darwin, :arm64_darwin do
+if RUBY_PLATFORM.include?("darwin")
   # Exclude problematic versions of cocoapods and activesupport that cause build failures.
   gem 'cocoapods', '>= 1.13', '!= 1.15.0', '!= 1.15.1'
   gem 'activesupport', '>= 6.1.7.5', '!= 7.1.0'
