@@ -1,6 +1,15 @@
 name: CD
 
 on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Git ref (branch or tag) to deploy'
+        required: false
+      target:
+        description: 'Which target to deploy (beta|release|auto)'
+        required: false
+        default: 'auto'
   workflow_run:
     workflows: ["CI"]
     types:
@@ -14,6 +23,12 @@ jobs:
     name: Deploy Android
     runs-on: ubuntu-latest
     if: |
+      (github.event_name == 'workflow_dispatch' &&
+       (inputs.target == 'release' || inputs.target == 'auto') &&
+       (inputs.ref == 'refs/heads/main' || startsWith(inputs.ref, 'refs/tags/v'))) ||
+      (github.event_name == 'workflow_dispatch' &&
+       (inputs.target == 'beta' || inputs.target == 'auto') &&
+       (inputs.ref == 'refs/heads/develop' || inputs.ref == 'refs/heads/Fastlane-integration')) ||
       (github.event_name == 'workflow_run' &&
        github.event.workflow_run.conclusion == 'success' &&
        (github.event.workflow_run.head_branch == 'main' ||
@@ -83,6 +98,12 @@ jobs:
     name: Deploy iOS
     runs-on: macos-latest
     if: |
+      (github.event_name == 'workflow_dispatch' &&
+       (inputs.target == 'release' || inputs.target == 'auto') &&
+       (inputs.ref == 'refs/heads/main' || startsWith(inputs.ref, 'refs/tags/v'))) ||
+      (github.event_name == 'workflow_dispatch' &&
+       (inputs.target == 'beta' || inputs.target == 'auto') &&
+       (inputs.ref == 'refs/heads/develop' || inputs.ref == 'refs/heads/Fastlane-integration')) ||
       (github.event_name == 'workflow_run' &&
        github.event.workflow_run.conclusion == 'success' &&
        (github.event.workflow_run.head_branch == 'main' ||
@@ -155,10 +176,13 @@ jobs:
     name: Deploy iOS Beta
     runs-on: macos-latest
     if: |
-      github.event_name == 'workflow_run' &&
-      github.event.workflow_run.conclusion == 'success' &&
-      (github.event.workflow_run.head_branch == 'develop' ||
-       github.event.workflow_run.head_branch == 'Fastlane-integration')
+      (github.event_name == 'workflow_dispatch' &&
+       (inputs.target == 'beta' || inputs.target == 'auto') &&
+       (inputs.ref == 'refs/heads/develop' || inputs.ref == 'refs/heads/Fastlane-integration')) ||
+      (github.event_name == 'workflow_run' &&
+       github.event.workflow_run.conclusion == 'success' &&
+       (github.event.workflow_run.head_branch == 'develop' ||
+        github.event.workflow_run.head_branch == 'Fastlane-integration'))
     
     steps:
     - name: Checkout code
@@ -210,10 +234,13 @@ jobs:
     name: Deploy Android Beta
     runs-on: ubuntu-latest
     if: |
-      github.event_name == 'workflow_run' &&
-      github.event.workflow_run.conclusion == 'success' &&
-      (github.event.workflow_run.head_branch == 'develop' ||
-       github.event.workflow_run.head_branch == 'Fastlane-integration')
+      (github.event_name == 'workflow_dispatch' &&
+       (inputs.target == 'beta' || inputs.target == 'auto') &&
+       (inputs.ref == 'refs/heads/develop' || inputs.ref == 'refs/heads/Fastlane-integration')) ||
+      (github.event_name == 'workflow_run' &&
+       github.event.workflow_run.conclusion == 'success' &&
+       (github.event.workflow_run.head_branch == 'develop' ||
+        github.event.workflow_run.head_branch == 'Fastlane-integration'))
     
     steps:
     - name: Checkout code

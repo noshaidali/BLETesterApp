@@ -127,3 +127,17 @@ jobs:
         path: ios/build/
         retention-days: 7
 
+    - name: Trigger CD workflow
+      if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/Fastlane-integration'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const ref = context.ref;
+          await github.rest.actions.createWorkflowDispatch({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            workflow_id: 'cd.yml',
+            ref: ref.replace('refs/heads/', ''),
+            inputs: { ref: ref, target: 'auto' }
+          });
+
