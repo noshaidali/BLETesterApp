@@ -12,6 +12,9 @@ if RUBY_PLATFORM.include?("darwin")
   gem 'concurrent-ruby', '< 1.3.4'
 end
 
+# Fastlane for automation
+gem 'fastlane'
+
 # Ruby 3.4.0 has removed some libraries from the standard library.
 gem 'bigdecimal'
 gem 'logger'

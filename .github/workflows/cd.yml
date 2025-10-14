@@ -45,7 +45,7 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '18'
+        node-version: '22.14.0'
         cache: 'npm'
         
     - name: Setup Java
@@ -64,10 +64,10 @@ jobs:
       uses: ruby/setup-ruby@v1
       with:
         ruby-version: '3.0'
-        bundler-cache: false
+        bundler-cache: true
         
-    - name: Install Fastlane
-      run: gem install fastlane
+    - name: Install dependencies
+      run: bundle install
         
     - name: Validate secrets
       run: |
@@ -92,7 +92,7 @@ jobs:
         ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
       run: |
-        fastlane android release
+        bundle exec fastlane android release
 
   deploy-ios:
     name: Deploy iOS
@@ -120,7 +120,7 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '18'
+        node-version: '22.14.0'
         cache: 'npm'
         
     - name: Install dependencies
@@ -193,7 +193,7 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '18'
+        node-version: '22.14.0'
         cache: 'npm'
         
     - name: Install dependencies
@@ -251,7 +251,7 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '18'
+        node-version: '22.14.0'
         cache: 'npm'
         
     - name: Install dependencies
@@ -270,10 +270,10 @@ jobs:
       uses: ruby/setup-ruby@v1
       with:
         ruby-version: '3.0'
-        bundler-cache: false
+        bundler-cache: true
         
-    - name: Install Fastlane
-      run: gem install fastlane
+    - name: Install dependencies
+      run: bundle install
         
     - name: Deploy Android Beta
       env:
@@ -283,5 +283,5 @@ jobs:
         ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
       run: |
-        fastlane android beta
+        bundle exec fastlane android beta
 
