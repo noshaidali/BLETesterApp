@@ -5,9 +5,9 @@ This guide explains how to set up the CI/CD pipeline for your React Native BLE T
 ## Overview
 
 The CI/CD pipeline includes:
-- **CI (Continuous Integration)**: Automated testing, linting, and building on every push/PR
-- **CD (Continuous Deployment)**: Automated deployment to app stores on releases
-- **Fastlane**: Automated build and deployment processes
+- **CI (Continuous Integration)**: Automated linting and builds on every push/PR
+- **CD (Continuous Deployment)**: Automated deployments that run only after CI succeeds
+- **Fastlane**: Automated build and store submission with bundler
 
 ## Prerequisites
 
@@ -67,18 +67,20 @@ fastlane match appstore
 ## Workflow Files
 
 ### CI Workflow (`.github/workflows/ci.yml`)
-- Runs on every push and pull request
-- Executes tests, linting, and builds for both platforms
-- Uploads build artifacts
+- Triggers on every push and pull request to `main`, `develop`, `Fastlane-integration`
+- Runs `lint` first, then builds Android and iOS in parallel
+- Uploads build artifacts (APK and iOS build output)
 
 ### CD Workflow (`.github/workflows/cd.yml`)
-- Runs on main branch pushes and version tags
-- Deploys to production app stores
-- Includes beta deployment for develop branch
+- Triggered via `workflow_run` and starts only after the CI workflow completes successfully
+- Production deploys on `main` branch and `v*` tags
+- Beta deploys on `develop` and `Fastlane-integration` branches
+- Uses `bundle exec fastlane` for all lanes
+- Validates required secrets before attempting deployments
 
 ### Fastlane Workflow (`.github/workflows/fastlane.yml`)
 - Manual workflow for running specific Fastlane lanes
-- Useful for testing and manual deployments
+- Useful for testing lanes locally in CI without full CD
 
 ## Fastlane Lanes
 
@@ -89,8 +91,9 @@ fastlane match appstore
 
 ### Android Lanes
 - `fastlane android build_debug`: Build debug APK
-- `fastlane android build_apk`: Build release APK
-- `fastlane android release`: Build and upload to Google Play
+- `fastlane android build_apk`: Build release APK (no upload)
+- `fastlane android beta`: Build and upload to Google Play Internal testing
+- `fastlane android release`: Build and upload to Google Play (production)
 
 ### Common Lanes
 - `fastlane test`: Run tests
@@ -100,9 +103,9 @@ fastlane match appstore
 ## Usage
 
 ### Automatic Deployment
-- Push to `main` branch → Triggers production deployment
-- Push to `develop` branch → Triggers beta deployment
-- Create a tag starting with `v` → Triggers production deployment
+- Push to `main` branch → CI runs; on success CD deploys to production (iOS and Android)
+- Push to `develop` or `Fastlane-integration` → CI runs; on success CD deploys to beta (TestFlight and Google Play Internal)
+- Create a tag starting with `v` → CI runs; on success CD deploys to production
 
 ### Manual Deployment
 1. Go to Actions tab in GitHub
@@ -113,13 +116,15 @@ fastlane match appstore
 
 ### Local Development
 ```bash
-# Install dependencies
+# Install dependencies (Ruby + JS)
 bundle install
 npm install
 
-# Run Fastlane locally
+# Run Fastlane locally (always via bundler)
 bundle exec fastlane ios build_dev
+bundle exec fastlane ios beta
 bundle exec fastlane android build_debug
+bundle exec fastlane android beta
 ```
 
 ## Troubleshooting
@@ -129,7 +134,8 @@ bundle exec fastlane android build_debug
 1. **Code Signing Issues**: Ensure certificates are properly configured in Apple Developer Portal
 2. **Keystore Issues**: Verify keystore file path and passwords are correct
 3. **Google Play Issues**: Check service account permissions and JSON format
-4. **Build Failures**: Check Node.js version and dependencies
+4. **Bundler/Fastlane Issues**: Always use `bundle exec fastlane` so the correct gem versions load
+5. **CocoaPods**: The iOS lanes run `pod install` against `ios/Podfile`; ensure Xcode CLTs are installed
 
 ### Debug Commands
 ```bash
