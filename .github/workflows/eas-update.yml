@@ -1,0 +1,74 @@
+name: EAS Update
+
+on:
+  push:
+    branches:
+      - staging
+      - main
+    paths:
+      - '**/*'  # Trigger for all files
+    paths-ignore:
+      - 'ios/**'        # Ignore changes in the ios folder
+      - 'android/**'    # Ignore changes in the android folder
+      - 'fastlane/**'    # Ignore changes in the fastlane folder
+  pull_request:
+    branches:
+      - staging
+      - main
+    paths:
+      - '**/*'  # Trigger for all files
+    paths-ignore:
+      - 'ios/**'        # Ignore changes in the ios folder
+      - 'android/**'    # Ignore changes in the android folder
+      - 'fastlane/**'    # Ignore changes in the fastlane folder
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Choose environment"
+        required: true
+        default: "staging"
+        type: choice
+        options: [staging, production]
+
+jobs:
+  eas-update:
+    runs-on: macos-latest
+    env:
+      # Determine environment: manual input wins; fallback to branch -> env
+      APP_ENV: ${{ github.event.inputs.environment || (github.ref_name == 'main' && 'production' || 'staging') }}
+
+      # EAS API Key for authentication
+      EAS_CLI_ACCESS_TOKEN: ${{ secrets.EAS_CLI_ACCESS_TOKEN }}
+
+      # Expo project configuration
+      EXPO_PROJECT_NAME: "your-expo-project-name"
+      EXPO_PROJECT_SLUG: "your-expo-project-slug"
+
+    steps:
+      - name: 🧩 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🧱 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: 📦 Install JS dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: 📦 Install EAS CLI
+        run: npm install -g eas-cli
+
+      # --- EAS update (with dynamic channel based on APP_ENV)
+      - name: 📲 Run EAS Update
+        run: |
+          eas update --channel ${{ env.APP_ENV }} --message "Updated to ${APP_ENV} build" --non-interactive
+
+      # --- Upload build artifacts (if needed for debugging)
+      - name: 🗂 Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: eas-update-artifacts-${{ github.ref_name }}-${{ github.run_number }}
+          path: |
+            android/app/build/outputs/**/*.aab
+            ios/build/**/*.ipa

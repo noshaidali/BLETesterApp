@@ -54,7 +54,7 @@ jobs:
       - name: 🧱 Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 22.14.0
 
       - name: 📦 Install JS dependencies
         run: yarn install --frozen-lockfile
