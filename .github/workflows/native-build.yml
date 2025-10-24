@@ -65,13 +65,26 @@ jobs:
           ruby-version: '3.2'
           bundler-cache: true
 
+      # --- iOS build via Fastlane (first step)
+      - name: 🍎 Build iOS (Fastlane)
+        run: |
+          cd ios
+          bundle exec fastlane build env:${APP_ENV}
+
+      # --- Upload iOS build to TestFlight
+      - name: ☁️ Upload iOS to TestFlight
+        if: success()
+        run: |
+          cd ios
+          bundle exec fastlane upload env:${APP_ENV}
+
       # --- Android signing: restore keystore from GitHub Secret
       - name: 🔐 Materialize Android keystore
         run: |
           echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/app/my-release-key.keystore
         shell: bash
 
-      # --- Android build via Fastlane
+      # --- Android build via Fastlane (after iOS)
       - name: 🤖 Build Android (Fastlane)
         env:
           MY_RELEASE_STORE_FILE: "my-release-key.keystore"
@@ -89,19 +102,6 @@ jobs:
           GOOGLE_PLAY_JSON_KEY: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
         run: |
           cd android
-          bundle exec fastlane upload env:${APP_ENV}
-
-      # --- iOS build via Fastlane
-      - name: 🍎 Build iOS (Fastlane)
-        run: |
-          cd ios
-          bundle exec fastlane build env:${APP_ENV}
-
-      # --- Upload iOS build to TestFlight
-      - name: ☁️ Upload iOS to TestFlight
-        if: success()
-        run: |
-          cd ios
           bundle exec fastlane upload env:${APP_ENV}
 
       # --- Upload artifacts for debugging or manual download
