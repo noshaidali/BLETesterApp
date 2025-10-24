@@ -29,5 +29,9 @@
             <category android:name="android.intent.category.LAUNCHER" />
         </intent-filter>
       </activity>
+      <meta-data android:name="expo.modules.updates.EXPO_UPDATE_URL" android:value="https://u.expo.dev/47428f05-f206-4624-b4bd-a649e6cd486a" />
+      <meta-data android:name="expo.modules.updates.EXPO_UPDATES_ENABLED" android:value="true" />
+      <meta-data android:name="expo.modules.updates.EXPO_RELEASE_CHANNEL" android:value="production" />
+      <meta-data android:name="expo.modules.updates.EXPO_SDK_VERSION" android:value="51.0.0" /> <!-- Or your Expo SDK version -->
     </application>
 </manifest>

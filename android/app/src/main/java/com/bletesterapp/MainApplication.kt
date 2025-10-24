@@ -1,5 +1,9 @@
 package com.bletesterapp
 
+import expo.modules.updates.UpdatesController;
+import expo.modules.ApplicationLifecycleDispatcher;
+import android.content.res.Configuration;
+
 import android.app.Application
 import com.facebook.react.PackageList
 import com.facebook.react.ReactApplication
@@ -33,6 +37,14 @@ class MainApplication : Application(), ReactApplication {
 
   override fun onCreate() {
     super.onCreate()
+    UpdatesController.initialize(this)
+    ApplicationLifecycleDispatcher.onApplicationCreate(this)
     loadReactNative(this)
+  }
+
+  @Override
+  public void onConfigurationChanged(Configuration newConfig) {
+    super.onConfigurationChanged(newConfig);
+    ApplicationLifecycleDispatcher.onConfigurationChanged(this, newConfig);
   }
 }

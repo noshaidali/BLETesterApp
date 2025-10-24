@@ -1,4 +1,21 @@
 {
   "name": "BLETesterApp",
-  "displayName": "BLETesterApp"
+  "displayName": "BLETesterApp",
+  "expo": {
+    "name": "BLETesterApp",
+    "slug": "bletesterapp",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/47428f05-f206-4624-b4bd-a649e6cd486a"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "47428f05-f206-4624-b4bd-a649e6cd486a"
+      }
+    },
+    "owner": "noshaid-xcorebit-organization"
+  },
+  "owner": "noshaid-xcorebit-organization"
 }

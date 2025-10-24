@@ -1,0 +1,20 @@
+{
+    "cli": {
+      "version": ">= 7.1.3"
+    },
+    "build": {
+      "staging": {
+        "developmentClient": false,
+        "distribution": "internal",
+        "channel": "staging"
+      },
+      "production": {
+        "developmentClient": false,
+        "channel": "production"
+      }
+    },
+    "submit": {
+      "production": {}
+    }
+  }
+  

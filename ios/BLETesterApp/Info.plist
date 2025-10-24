@@ -51,5 +51,13 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
+  <key>EXUpdatesURL</key>
+  <string>https://u.expo.dev/47428f05-f206-4624-b4bd-a649e6cd486a</string>
+  <key>EXUpdatesEnabled</key>
+  <true/>
+  <key>EXUpdatesReleaseChannel</key>
+  <string>production</string>
+  <key>EXUpdatesRuntimeVersion</key>
+  <string>1.0.0</string> <!-- Or match your app version -->
 </dict>
 </plist>

@@ -1,5 +1,8 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { getVersion } from 'react-native-device-info';
+import * as Updates from 'expo-updates';
+
 
 export default function HomeScreen({ navigation }) {
   return (
@@ -19,6 +22,13 @@ export default function HomeScreen({ navigation }) {
       >
         <Text style={styles.buttonText}>Test with BLE-Manager</Text>
       </TouchableOpacity> */}
+
+    <View style={{marginTop: 10}}>
+      <Text>App Version: {getVersion()}</Text>
+      <Text>Expo Version: 01</Text>
+      <Text>OTA: ${Updates.runtimeVersion}</Text>
+      <Text>Channel: {Updates.channel}</Text>
+    </View>
     </View>
   );
 }

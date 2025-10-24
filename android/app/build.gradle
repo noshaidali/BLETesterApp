@@ -84,6 +84,10 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0"
+        manifestPlaceholders = [
+            expo_updates_release_channel: "production", // default
+        ]
+
     }
 
     signingConfigs {
@@ -127,4 +131,5 @@ dependencies {
     } else {
         implementation jscFlavor
     }
+    implementation "host.exp.exponent:expo-updates-interface:1.1.0" // (check latest version)
 }
