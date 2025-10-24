@@ -1,0 +1,83 @@
+default_platform(:ios)
+
+platform :ios do
+  #############################################################
+  # 🚀 BUILD LANE
+  # Builds the iOS app for staging or production
+  #############################################################
+  desc "Build iOS (env: staging|production)"
+  lane :build do |options|
+    # Determine environment
+    env = options[:env] || ENV["APP_ENV"] || "staging"
+    UI.message("🛠 Building iOS app for environment: #{env}")
+
+    # Define scheme & configuration (customize if you have multiple)
+    scheme = (env == "production") ? "BLETesterApp" : "BLETesterApp"
+    configuration = "Release"
+
+    # Create App Store Connect API key from environment variables
+    api_key = app_store_connect_api_key(
+      key_id: ENV["ASC_KEY_ID"],
+      issuer_id: ENV["ASC_ISSUER_ID"],
+      key_content: ENV["ASC_API_KEY_P8"],
+      duration: 1200,
+      in_house: false
+    )
+
+    # Clean old builds (optional)
+    sh("xcodebuild clean -workspace BLETesterApp.xcworkspace -scheme #{scheme} -configuration #{configuration}")
+
+    # Build archive
+    build_app(
+      workspace: "BLETesterApp.xcworkspace",
+      scheme: scheme,
+      configuration: configuration,
+      export_method: "app-store", # Options: app-store, ad-hoc, enterprise, development
+      output_directory: "build",
+      clean: true,
+      api_key: api_key
+    )
+
+    Dir.glob("build/**/*.ipa").each do |ipa|
+      UI.message("✅ Built IPA: #{ipa}")
+    end
+  end
+
+  #############################################################
+  # 🚀 UPLOAD LANE
+  # Uploads the generated IPA to TestFlight (or production)
+  #############################################################
+  desc "Upload iOS build to TestFlight or App Store (env: staging|production)"
+  lane :upload do |options|
+    env = options[:env] || ENV["APP_ENV"] || "staging"
+    UI.message("📤 Uploading iOS build for environment: #{env}")
+
+    # Use same API key authentication
+    api_key = app_store_connect_api_key(
+      key_id: ENV["ASC_KEY_ID"],
+      issuer_id: ENV["ASC_ISSUER_ID"],
+      key_content: ENV["ASC_API_KEY_P8"],
+      duration: 1200,
+      in_house: false
+    )
+
+    # Locate the most recent IPA
+    ipa_path = Dir.glob("build/**/*.ipa").last
+    if ipa_path.nil?
+      UI.message("⚠️ No IPA found — running build first...")
+      build(env: env)
+      ipa_path = Dir.glob("build/**/*.ipa").last
+    end
+
+    # Upload to TestFlight (default) or App Store
+    upload_to_testflight(
+      api_key: api_key,
+      ipa: ipa_path,
+      skip_waiting_for_build_processing: false,
+      distribute_external: (env == "production"), # internal for staging, external for production
+      changelog: "Automated CI/CD upload for #{env} build."
+    )
+
+    UI.success("✅ Uploaded #{ipa_path} to TestFlight (#{env})")
+  end
+end

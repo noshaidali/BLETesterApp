@@ -14,3 +14,10 @@ gem 'bigdecimal'
 gem 'logger'
 gem 'benchmark'
 gem 'mutex_m'
+
+# dd Fastlane for CI/CD native builds
+gem 'fastlane'
+
+# (Optional) Add common Fastlane plugins you might use later
+# gem 'fastlane-plugin-firebase_app_distribution'
+# gem 'fastlane-plugin-sentry'

@@ -8,7 +8,7 @@ export default function HomeScreen({ navigation }) {
 
       <TouchableOpacity
         style={styles.button}
-        onPress={() => navigation.navigate('Connectivity', { method: 'plx' })}
+        // onPress={() => navigation.navigate('Connectivity', { method: 'plx' })}
       >
         <Text style={styles.buttonText}>Test with BLE-PLX</Text>
       </TouchableOpacity>

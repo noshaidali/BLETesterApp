@@ -1,0 +1,105 @@
+name: Native Build & Upload (Fastlane)
+
+on:
+  push:
+    branches: [staging, main]
+    paths:
+      - 'ios/**'
+      - 'android/**'
+      - 'fastlane/**'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Choose environment"
+        required: true
+        default: "staging"
+        type: choice
+        options: [staging, production]
+
+jobs:
+  native-build:
+    runs-on: macos-latest
+    env:
+      # Determine environment: manual input wins; fallback to branch
+      APP_ENV: ${{ github.event.inputs.environment || (github.ref_name == 'main' && 'production' || 'staging') }}
+
+      # iOS App Store Connect API key (for Fastlane)
+      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+      ASC_API_KEY_P8: ${{ secrets.ASC_API_KEY_P8 }}
+
+      # Android signing secrets
+      ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+      ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+      ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+      ANDROID_KEY_ALIAS_PASSWORD: ${{ secrets.ANDROID_KEY_ALIAS_PASSWORD }}
+
+      # Google Play JSON key (for upload)
+      GOOGLE_PLAY_JSON_KEY: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
+
+    steps:
+      - name: 🧩 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🧱 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: 📦 Install JS dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: 💎 Setup Ruby and Bundler cache
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: true
+
+      # --- Android signing: restore keystore from GitHub Secret
+      - name: 🔐 Materialize Android keystore
+        run: |
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/app/my-release-key.keystore
+        shell: bash
+
+      # --- Android build via Fastlane
+      - name: 🤖 Build Android (Fastlane)
+        env:
+          MY_RELEASE_STORE_FILE: "my-release-key.keystore"
+          MY_RELEASE_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          MY_RELEASE_STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          MY_RELEASE_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_ALIAS_PASSWORD }}
+        run: |
+          cd android
+          bundle exec fastlane build env:${APP_ENV}
+
+      # --- Upload Android build to Google Play
+      - name: 📤 Upload Android to Google Play
+        if: success()
+        env:
+          GOOGLE_PLAY_JSON_KEY: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
+        run: |
+          cd android
+          bundle exec fastlane upload env:${APP_ENV}
+
+      # --- iOS build via Fastlane
+      - name: 🍎 Build iOS (Fastlane)
+        run: |
+          cd ios
+          bundle exec fastlane build env:${APP_ENV}
+
+      # --- Upload iOS build to TestFlight
+      - name: ☁️ Upload iOS to TestFlight
+        if: success()
+        run: |
+          cd ios
+          bundle exec fastlane upload env:${APP_ENV}
+
+      # --- Upload artifacts for debugging or manual download
+      - name: 🗂 Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-build-${{ github.ref_name }}-${{ github.run_number }}
+          path: |
+            android/app/build/outputs/**/*.aab
+            android/app/build/outputs/**/*.apk
+            ios/build/**/*.ipa

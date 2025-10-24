@@ -1,0 +1,71 @@
+default_platform(:android)
+
+platform :android do
+  #############################################################
+  # 🚀 BUILD LANE
+  # Builds a signed AAB/APK for staging or production
+  #############################################################
+  desc "Build Android app (env: staging|production)"
+  lane :build do |options|
+    # Determine environment (default: staging)
+    env = options[:env] || ENV["APP_ENV"] || "staging"
+    puts "🛠 Building Android app for environment: #{env}"
+
+    # Clean previous builds
+    gradle(task: "clean")
+
+    # Choose Gradle task (update if you have flavors)
+    task = (env == "production") ? "assembleRelease" : "assembleRelease"
+
+    # Build and sign using Gradle
+    gradle(
+      task: task,
+      print_command: true,
+      properties: {
+        "MY_RELEASE_STORE_FILE" => ENV["MY_RELEASE_STORE_FILE"],
+        "MY_RELEASE_STORE_PASSWORD" => ENV["MY_RELEASE_STORE_PASSWORD"],
+        "MY_RELEASE_KEY_ALIAS" => ENV["MY_RELEASE_KEY_ALIAS"],
+        "MY_RELEASE_KEY_PASSWORD" => ENV["MY_RELEASE_KEY_PASSWORD"]
+      }
+    )
+
+    # Locate output
+    Dir.glob("app/build/outputs/**/*.aab").each do |aab|
+      UI.message("✅ Built AAB: #{aab}")
+    end
+    Dir.glob("app/build/outputs/**/*.apk").each do |apk|
+      UI.message("✅ Built APK: #{apk}")
+    end
+  end
+
+  #############################################################
+  # 🚀 UPLOAD LANE
+  # Uploads the generated AAB to Google Play (Internal Track)
+  #############################################################
+  desc "Upload built AAB to Google Play (env: staging|production)"
+  lane :upload do |options|
+    env = options[:env] || ENV["APP_ENV"] || "staging"
+    puts "📤 Uploading Android build for environment: #{env}"
+
+    # Ensure an AAB exists — build if not
+    aab_path = Dir.glob("app/build/outputs/**/*.aab").last
+    if aab_path.nil?
+      UI.message("⚠️ No AAB found. Running build first...")
+      build(env: env)
+      aab_path = Dir.glob("app/build/outputs/**/*.aab").last
+    end
+
+    # Upload to Play Store Internal testing track by default
+    upload_to_play_store(
+      track: (env == "production") ? "production" : "internal",
+      aab: aab_path,
+      skip_upload_metadata: true,
+      skip_upload_changelogs: true,
+      skip_upload_images: true,
+      json_key: ENV["GOOGLE_PLAY_JSON_KEY"],  # JSON key content from Google Cloud Service Account
+      validate_only: false
+    )
+
+    UI.message("✅ Uploaded #{aab_path} to Google Play (#{env})")
+  end
+end
