@@ -2,7 +2,17 @@ name: Native Build & Upload (Fastlane)
 
 on:
   push:
-    branches: [staging, main]
+    branches: 
+      - staging
+      - main
+    paths:
+      - 'ios/**'
+      - 'android/**'
+      - 'fastlane/**'
+  pull_request:
+    branches: 
+      - staging
+      - main
     paths:
       - 'ios/**'
       - 'android/**'
