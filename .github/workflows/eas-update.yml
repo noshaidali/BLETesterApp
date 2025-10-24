@@ -5,8 +5,6 @@ on:
     branches:
       - staging
       - main
-    paths:
-      - '**/*'  # Trigger for all files
     paths-ignore:
       - 'ios/**'        # Ignore changes in the ios folder
       - 'android/**'    # Ignore changes in the android folder
@@ -15,8 +13,6 @@ on:
     branches:
       - staging
       - main
-    paths:
-      - '**/*'  # Trigger for all files
     paths-ignore:
       - 'ios/**'        # Ignore changes in the ios folder
       - 'android/**'    # Ignore changes in the android folder
