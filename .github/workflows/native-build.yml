@@ -65,18 +65,18 @@ jobs:
           ruby-version: '3.2'
           bundler-cache: true
 
-      # --- iOS build via Fastlane (first step)
-      - name: 🍎 Build iOS (Fastlane)
-        run: |
-          cd ios
-          bundle exec fastlane build env:${APP_ENV}
+      # # --- iOS build via Fastlane (first step)
+      # - name: 🍎 Build iOS (Fastlane)
+      #   run: |
+      #     cd ios
+      #     bundle exec fastlane build env:${APP_ENV}
 
-      # --- Upload iOS build to TestFlight
-      - name: ☁️ Upload iOS to TestFlight
-        if: success()
-        run: |
-          cd ios
-          bundle exec fastlane upload env:${APP_ENV}
+      # # --- Upload iOS build to TestFlight
+      # - name: ☁️ Upload iOS to TestFlight
+      #   if: success()
+      #   run: |
+      #     cd ios
+      #     bundle exec fastlane upload env:${APP_ENV}
 
       # --- Android signing: restore keystore from GitHub Secret
       - name: 🔐 Materialize Android keystore
