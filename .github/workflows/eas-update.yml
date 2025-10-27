@@ -36,9 +36,12 @@ jobs:
       # EAS API Key for authentication
       EAS_CLI_ACCESS_TOKEN: ${{ secrets.EAS_CLI_ACCESS_TOKEN }}
 
-      # Expo project configuration
-      EXPO_PROJECT_NAME: "your-expo-project-name"
-      EXPO_PROJECT_SLUG: "your-expo-project-slug"
+      # Expo project configuration (using secrets)
+      EXPO_PROJECT_NAME: ${{ secrets.EXPO_PROJECT_NAME }}
+      EXPO_PROJECT_SLUG: ${{ secrets.EXPO_PROJECT_SLUG }}
+      
+      # Expo Token for authentication in CI/CD (added to GitHub Secrets)
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
     steps:
       - name: 🧩 Checkout repository
